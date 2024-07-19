@@ -3,32 +3,23 @@ import getErrorMessage from './getErrorMessage'
 import getSuccessMessage from './getSuccessMessage'
 import { RegisterData, RegisterDto } from '../auth/register/register.service'
 import validator, { ValidatorErrors } from './validator'
+import emailValidator from './emailValidator'
+import passwordValidator from './passwordValidator'
 
-export type DtoValidationErrors = ValidatorErrors<'email' | 'password' | 'role'>
+export type RegisterDtoValidationErrors = ValidatorErrors<'email' | 'password' | 'role'>
 
 const validateRegisterDto = (registerDto: RegisterDto) => {
 	const result: Partial<RegisterData> = {}
-	const errors: DtoValidationErrors[] = []
+	const errors: RegisterDtoValidationErrors[] = []
 
-	const emailValidationError = validator<'email'>(registerDto.email, {
-		type: 'string',
-		name: 'email',
-		regExp: /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-		maxLength: 64,
-		notEmpty: true,
-	})
+	const emailValidationError = emailValidator(registerDto.email)
 	if (emailValidationError) {
 		errors.push(emailValidationError)
 	} else {
 		result.email = registerDto.email as string
 	}
 
-	const passwordValidationError = validator<'password'>(registerDto.password, {
-		type: 'string',
-		name: 'password',
-		maxLength: 64,
-		notEmpty: true,
-	})
+	const passwordValidationError = passwordValidator(registerDto.password)
 	if (passwordValidationError) {
 		errors.push(passwordValidationError)
 	} else {
@@ -47,7 +38,7 @@ const validateRegisterDto = (registerDto: RegisterDto) => {
 	}
 
 	if (errors.length) {
-		return getErrorMessage<DtoValidationErrors[]>(errors)
+		return getErrorMessage<RegisterDtoValidationErrors[]>(errors)
 	}
 	return getSuccessMessage<'Register data is valid', RegisterData>('Register data is valid', result as RegisterData)
 }

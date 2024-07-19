@@ -5,7 +5,7 @@ import getErrorMessage from '../../utils/getErrorMessage'
 import getSuccessMessage from '../../utils/getSuccessMessage'
 import * as bcrypt from 'bcryptjs'
 import { ErrorResponse, SuccessResponse } from '../../types/Response'
-import validateRegisterDto, { DtoValidationErrors } from '../../utils/validateRegisterDto'
+import validateRegisterDto, { RegisterDtoValidationErrors } from '../../utils/validateRegisterDto'
 
 export type RegisterDto = {
 	email?: unknown
@@ -20,7 +20,9 @@ export type RegisterData = {
 }
 
 type RegisterUser =
-	| ErrorResponse<DtoValidationErrors[] | `Unhandled error happened` | `User with this email already existing`>
+	| ErrorResponse<
+			RegisterDtoValidationErrors[] | `Unhandled error happened` | `User with this email already existing`
+	  >
 	| SuccessResponse<'User registered successfully', Omit<User, 'password'>>
 
 @Injectable()
