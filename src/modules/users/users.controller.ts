@@ -1,4 +1,4 @@
-import { Controller, Get, Req } from '@nestjs/common'
+import { Controller, Get, Param, Req } from '@nestjs/common'
 import { UsersService } from './users.service'
 import { Request } from 'express'
 
@@ -9,5 +9,10 @@ export class UsersController {
 	@Get()
 	async getUsers(@Req() req: Request) {
 		return await this.usersService.getUsers(req.cookies?.jwt)
+	}
+
+	@Get('/:id')
+	async getOneUser(@Req() req: Request, @Param('id') id: string) {
+		return await this.usersService.getUser(req.cookies?.jwt, id)
 	}
 }
