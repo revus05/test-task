@@ -38,15 +38,17 @@ export class RegisterService {
 
 	private async createUser(data: RegisterData): Promise<RegisterUser> {
 		try {
-			const newUser: User = await prisma.user.create({
+			const newUser: Omit<User, 'password'> = await prisma.user.create({
 				data: {
 					email: data.email,
 					password: await bcrypt.hash(data.password, await bcrypt.genSalt(4)),
 					role: data.role,
 				},
+				omit: {
+					password: true,
+				},
 			})
 			if (newUser) {
-				delete newUser.password
 				return getSuccessMessage<'User registered successfully', Omit<User, 'password'>>(
 					'User registered successfully',
 					newUser,
