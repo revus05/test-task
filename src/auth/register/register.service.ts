@@ -21,7 +21,7 @@ export type RegisterData = {
 
 type RegisterUser =
 	| ErrorResponse<DtoValidationErrors[] | `Unhandled error happened` | `User with this email already existing`>
-	| SuccessResponse<'User registered successfully', User>
+	| SuccessResponse<'User registered successfully', Omit<User, 'password'>>
 
 @Injectable()
 export class RegisterService {
@@ -44,7 +44,11 @@ export class RegisterService {
 				},
 			})
 			if (newUser) {
-				return getSuccessMessage<'User registered successfully', User>('User registered successfully', newUser)
+				delete newUser.password
+				return getSuccessMessage<'User registered successfully', Omit<User, 'password'>>(
+					'User registered successfully',
+					newUser,
+				)
 			}
 		} catch (error) {
 			return this.handleUniqueConstraintError(error)
