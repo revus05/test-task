@@ -1,10 +1,10 @@
 import { $Enums } from '@prisma/client'
 import getErrorMessage from './getErrorMessage'
 import getSuccessMessage from './getSuccessMessage'
-import { RegisterData, RegisterDto } from '../auth/register/register.service'
 import validator, { ValidatorErrors } from './validator'
 import emailValidator from './emailValidator'
 import passwordValidator from './passwordValidator'
+import { RegisterData, RegisterDto } from '../modules/auth/register/register.service'
 
 export type RegisterDtoValidationErrors = ValidatorErrors<'email' | 'password' | 'role'>
 

@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common'
-import prisma from '../../../prisma/client'
+import { ErrorResponse, SuccessResponse } from '../../../types/Response'
 import { $Enums, Prisma, User } from '@prisma/client'
-import getErrorMessage from '../../utils/getErrorMessage'
-import getSuccessMessage from '../../utils/getSuccessMessage'
+import validateRegisterDto, { RegisterDtoValidationErrors } from '../../../utils/validateRegisterDto'
+import prisma from '../../../../prisma/client'
 import * as bcrypt from 'bcryptjs'
-import { ErrorResponse, SuccessResponse } from '../../types/Response'
-import validateRegisterDto, { RegisterDtoValidationErrors } from '../../utils/validateRegisterDto'
+import getSuccessMessage from '../../../utils/getSuccessMessage'
+import getErrorMessage from '../../../utils/getErrorMessage'
 
 export type RegisterDto = {
 	email?: unknown

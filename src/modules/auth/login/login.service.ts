@@ -1,12 +1,14 @@
 import { Injectable } from '@nestjs/common'
-import validateLoginCredentialsDto, { LoginCredentialsValidationErrors } from '../../utils/validateLoginCredentialsDto'
-import prisma from '../../../prisma/client'
 import { User } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
-import getSuccessMessage from '../../utils/getSuccessMessage'
 import * as JWT from 'jsonwebtoken'
-import getErrorMessage from '../../utils/getErrorMessage'
-import { ErrorResponse, SuccessResponse } from '../../types/Response'
+import { ErrorResponse, SuccessResponse } from '../../../types/Response'
+import validateLoginCredentialsDto, {
+	LoginCredentialsValidationErrors,
+} from '../../../utils/validateLoginCredentialsDto'
+import prisma from '../../../../prisma/client'
+import getErrorMessage from '../../../utils/getErrorMessage'
+import getSuccessMessage from '../../../utils/getSuccessMessage'
 
 export type LoginCredentialsDto = {
 	email?: unknown
