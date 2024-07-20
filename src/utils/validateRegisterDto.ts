@@ -1,10 +1,11 @@
 import { $Enums } from '@prisma/client'
 import getErrorMessage from './getErrorMessage'
 import getSuccessMessage from './getSuccessMessage'
-import validator, { ValidatorErrors } from './validator'
+import { ValidatorErrors } from './validator'
 import emailValidator from './emailValidator'
 import passwordValidator from './passwordValidator'
 import { RegisterData, RegisterDto } from '../modules/auth/register/register.service'
+import roleValidator from './roleValidator'
 
 export type RegisterDtoValidationErrors = ValidatorErrors<'email' | 'password' | 'role'>
 
@@ -26,11 +27,7 @@ const validateRegisterDto = (registerDto: RegisterDto) => {
 		result.password = registerDto.password as string
 	}
 
-	const roleValidationError = validator<'role'>(registerDto.role, {
-		type: 'string',
-		name: 'role',
-		match: ['ADMIN', 'USER'],
-	})
+	const roleValidationError = roleValidator(registerDto.role)
 	if (roleValidationError) {
 		errors.push(roleValidationError)
 	} else {
