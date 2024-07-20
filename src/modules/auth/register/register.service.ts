@@ -1,11 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { ErrorResponse, SuccessResponse } from '../../../types/Response'
-import { $Enums, Prisma, User } from '@prisma/client'
+import { $Enums, User } from '@prisma/client'
 import validateRegisterDto, { RegisterDtoValidationErrors } from '../../../utils/validateRegisterDto'
 import prisma from '../../../../prisma/client'
 import * as bcrypt from 'bcryptjs'
 import getSuccessMessage from '../../../utils/getSuccessMessage'
 import getErrorMessage from '../../../utils/getErrorMessage'
+import handleUniqueConstraintError from '../../../utils/handleUniqueConstraintError'
 
 export type RegisterDto = {
 	email?: unknown
@@ -55,16 +56,7 @@ export class RegisterService {
 				)
 			}
 		} catch (error) {
-			return this.handleUniqueConstraintError(error)
-		}
-		return getErrorMessage('Unhandled error happened')
-	}
-
-	private handleUniqueConstraintError(error: unknown): RegisterUser {
-		if (error instanceof Prisma.PrismaClientKnownRequestError) {
-			if (error.code === 'P2002') {
-				return getErrorMessage<`User with this email already existing`>(`User with this email already existing`)
-			}
+			return handleUniqueConstraintError(error)
 		}
 		return getErrorMessage('Unhandled error happened')
 	}
