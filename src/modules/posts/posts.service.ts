@@ -95,7 +95,7 @@ export class PostsService {
 		return getSuccessMessage<'Successfully got post', Post>('Successfully got post', post)
 	}
 
-	public async updatePost(jwt, id: string, updatePostDto: PostDto): Promise<UpdatePost> {
+	public async updatePost(jwt: unknown, id: string, updatePostDto: PostDto): Promise<UpdatePost> {
 		const numericId = +id
 		if (!numericId) {
 			return getErrorMessage<'Wrong id provided'>('Wrong id provided')
