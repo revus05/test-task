@@ -18,6 +18,16 @@ type GetPost =
 	| ErrorResponse<'Unhandled error happened' | 'Wrong id provided'>
 	| SuccessResponse<'Successfully got post', Post>
 
+type UpdatePost =
+	| ErrorResponse<
+			| ValidatorErrors<'title' | 'content'>[]
+			| 'Unauthorized'
+			| 'Wrong id provided'
+			| 'Unhandled error happened'
+			| 'You got no post with this id'
+	  >
+	| SuccessResponse<'Successfully updated post', Post>
+
 @Injectable()
 export class PostsService {
 	public async createPost(jwt: unknown, createPostDto: PostDto): Promise<CreatePost> {
@@ -83,5 +93,46 @@ export class PostsService {
 		}
 
 		return getSuccessMessage<'Successfully got post', Post>('Successfully got post', post)
+	}
+
+	public async updatePost(jwt, id: string, updatePostDto: PostDto): Promise<UpdatePost> {
+		const numericId = +id
+		if (!numericId) {
+			return getErrorMessage<'Wrong id provided'>('Wrong id provided')
+		}
+
+		const response = await getUserWithJwt(jwt)
+		if (response.status === 'error') {
+			return response
+		}
+
+		const validateResponse = validatePostDto(updatePostDto, {
+			title: false,
+			content: false,
+		})
+		if (validateResponse.status === 'error') {
+			return validateResponse
+		}
+
+		const user: Omit<User, 'password'> = response.data
+
+		let updatedPost: Post
+		try {
+			updatedPost = await prisma.post.update({
+				where: {
+					id: numericId,
+					userId: user.id,
+				},
+				data: { ...validateResponse.data },
+			})
+		} catch (e) {
+			return getErrorMessage('Unhandled error happened')
+		}
+
+		if (!updatedPost) {
+			return getErrorMessage<'You got no post with this id'>('You got no post with this id')
+		}
+
+		return getSuccessMessage<'Successfully updated post', Post>('Successfully updated post', updatedPost)
 	}
 }
