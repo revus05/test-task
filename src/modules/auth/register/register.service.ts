@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common'
 import { ErrorResponse, SuccessResponse } from '../../../types/Response'
 import { $Enums, User } from '@prisma/client'
-import validateRegisterDto, { RegisterDtoValidationErrors } from '../../../utils/validateRegisterDto'
+import validateUserDto, { UserData, UserDtoValidationErrors } from '../../../utils/validators/validateUserDto'
 import prisma from '../../../../prisma/client'
 import * as bcrypt from 'bcryptjs'
 import getSuccessMessage from '../../../utils/getSuccessMessage'
@@ -21,20 +21,18 @@ export type RegisterData = {
 }
 
 type RegisterUser =
-	| ErrorResponse<
-			RegisterDtoValidationErrors[] | `Unhandled error happened` | `User with this email already existing`
-	  >
+	| ErrorResponse<UserDtoValidationErrors[] | `Unhandled error happened` | `User with this email already existing`>
 	| SuccessResponse<'User registered successfully', Omit<User, 'password'>>
 
 @Injectable()
 export class RegisterService {
 	public async registerUser(registerDto: RegisterDto) {
-		const validationResult = validateRegisterDto(registerDto)
+		const validationResult = validateUserDto(registerDto)
 		if (validationResult.status !== 'ok') {
 			return validationResult
 		}
 
-		return await this.createUser(validationResult.data)
+		return await this.createUser(validationResult.data as UserData)
 	}
 
 	private async createUser(data: RegisterData): Promise<RegisterUser> {

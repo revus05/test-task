@@ -1,9 +1,9 @@
 import { ValidatorErrors } from './validator'
-import getErrorMessage from './getErrorMessage'
-import getSuccessMessage from './getSuccessMessage'
+import getErrorMessage from '../getErrorMessage'
+import getSuccessMessage from '../getSuccessMessage'
 import emailValidator from './emailValidator'
 import passwordValidator from './passwordValidator'
-import { LoginCredentials, LoginCredentialsDto } from '../modules/auth/login/login.service'
+import { LoginCredentials, LoginCredentialsDto } from '../../modules/auth/login/login.service'
 
 export type LoginCredentialsValidationErrors = ValidatorErrors<'email' | 'password'>
 

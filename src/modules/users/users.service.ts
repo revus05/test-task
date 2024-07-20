@@ -1,14 +1,14 @@
 import { Injectable } from '@nestjs/common'
 import prisma from '../../../prisma/client'
-import { $Enums, User } from '@prisma/client'
+import { User } from '@prisma/client'
 import getErrorMessage from '../../utils/getErrorMessage'
 import getSuccessMessage from '../../utils/getSuccessMessage'
 import { ErrorResponse, SuccessResponse } from '../../types/Response'
 import getUserWithJwt from '../../utils/getUserWithJwt'
 import handleUniqueConstraintError from '../../utils/handleUniqueConstraintError'
-import { ValidatorErrors } from '../../utils/validator'
-import validateUpdateDto from '../../utils/validateUpdateDto'
+import { ValidatorErrors } from '../../utils/validators/validator'
 import isUserOrAdmin from '../../utils/isUserOrAdmin'
+import validateUserDto, { UserDto } from '../../utils/validators/validateUserDto'
 
 type GetUsers =
 	| ErrorResponse<'Unauthorized' | 'You have no permissions for this query'>
@@ -28,18 +28,6 @@ type UpdateUser =
 			| 'Wrong id provided'
 	  >
 	| SuccessResponse<'Successfully updated user', Omit<User, 'password'>>
-
-export type UpdateBodyDto = {
-	email?: unknown
-	password?: unknown
-	role?: unknown
-}
-
-export type UpdateBody = {
-	email: string
-	password: string
-	role: $Enums.Role
-}
 
 @Injectable()
 export class UsersService {
@@ -78,7 +66,7 @@ export class UsersService {
 		return getSuccessMessage<'Successfully got user', Omit<User, 'password'>>('Successfully got user', queriedUser)
 	}
 
-	public async updateUser(jwt: unknown, id: string, updateBodyDto: UpdateBodyDto): Promise<UpdateUser> {
+	public async updateUser(jwt: unknown, id: string, updateBodyDto: UserDto): Promise<UpdateUser> {
 		const numericId = +id
 		if (!numericId) {
 			return getErrorMessage<'Wrong id provided'>('Wrong id provided')
@@ -94,7 +82,11 @@ export class UsersService {
 			return getErrorMessage<'You have no permissions for this query'>('You have no permissions for this query')
 		}
 
-		const validationResponse = await validateUpdateDto(updateBodyDto)
+		const validationResponse = await validateUserDto(updateBodyDto, {
+			email: false,
+			password: false,
+			role: false,
+		})
 		if (validationResponse.status === 'error') {
 			return validationResponse
 		}

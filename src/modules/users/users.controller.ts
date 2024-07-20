@@ -1,6 +1,7 @@
 import { Body, Controller, Delete, Get, Param, Put, Req } from '@nestjs/common'
-import { UpdateBodyDto, UsersService } from './users.service'
+import { UsersService } from './users.service'
 import { Request } from 'express'
+import { UserDto } from '../../utils/validators/validateUserDto'
 
 @Controller('users')
 export class UsersController {
@@ -17,7 +18,7 @@ export class UsersController {
 	}
 
 	@Put('/:id')
-	async updateUser(@Req() req: Request, @Param('id') id: string, @Body() updateBodyDto: UpdateBodyDto) {
+	async updateUser(@Req() req: Request, @Param('id') id: string, @Body() updateBodyDto: UserDto) {
 		return await this.usersService.updateUser(req.cookies?.jwt, id, updateBodyDto)
 	}
 

@@ -3,12 +3,11 @@ import { User } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 import * as JWT from 'jsonwebtoken'
 import { ErrorResponse, SuccessResponse } from '../../../types/Response'
-import validateLoginCredentialsDto, {
-	LoginCredentialsValidationErrors,
-} from '../../../utils/validateLoginCredentialsDto'
 import prisma from '../../../../prisma/client'
 import getErrorMessage from '../../../utils/getErrorMessage'
 import getSuccessMessage from '../../../utils/getSuccessMessage'
+import { ValidatorErrors } from '../../../utils/validators/validator'
+import validateLoginCredentialsDto from '../../../utils/validators/validateLoginDto'
 
 export type LoginCredentialsDto = {
 	email?: unknown
@@ -22,7 +21,7 @@ export type LoginCredentials = {
 
 type Login =
 	| ErrorResponse<
-			LoginCredentialsValidationErrors[] | 'Unhandled error happened' | 'No user with your credentials found'
+			ValidatorErrors<'email' | 'password'>[] | 'Unhandled error happened' | 'No user with your credentials found'
 	  >
 	| SuccessResponse<'User logged in successfully', { user: Omit<User, 'password'>; jwt: JWT }>
 
@@ -37,12 +36,12 @@ export class LoginService {
 		return await this.getUser(validationResult.data)
 	}
 
-	private async getUser(data: LoginCredentials): Promise<Login> {
+	private async getUser(credentials: LoginCredentials): Promise<Login> {
 		let user: User
 		try {
 			user = await prisma.user.findFirst({
 				where: {
-					email: data.email,
+					email: credentials.email,
 				},
 			})
 		} catch (e) {
@@ -52,7 +51,7 @@ export class LoginService {
 			return getErrorMessage<'No user with your credentials found'>('No user with your credentials found')
 		}
 
-		if (await bcrypt.compare(data.password, user.password)) {
+		if (await bcrypt.compare(credentials.password, user.password)) {
 			delete user.password
 			return getSuccessMessage<'User logged in successfully', { user: Omit<User, 'password'>; jwt: JWT }>(
 				'User logged in successfully',

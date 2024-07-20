@@ -1,22 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import getUserWithJwt from '../../utils/getUserWithJwt'
 import { Post, User } from '@prisma/client'
-import validateCreatePostDto from '../../utils/validateCreatePostDto'
+import validatePostDto, { PostDto } from '../../utils/validators/validatePostDto'
 import prisma from '../../../prisma/client'
 import getErrorMessage from '../../utils/getErrorMessage'
 import getSuccessMessage from '../../utils/getSuccessMessage'
 import { ErrorResponse, SuccessResponse } from '../../types/Response'
-import { ValidatorErrors } from '../../utils/validator'
-
-export type CreatePostDto = {
-	title?: unknown
-	content?: unknown
-}
-
-export type CreatePostData = {
-	title: string
-	content: string
-}
+import { ValidatorErrors } from '../../utils/validators/validator'
 
 type CreatePost =
 	| ErrorResponse<ValidatorErrors<'title' | 'content'>[] | 'Unauthorized' | 'Unhandled error happened'>
@@ -30,13 +20,13 @@ type GetPost =
 
 @Injectable()
 export class PostsService {
-	public async createPost(jwt: unknown, createPostDto: CreatePostDto): Promise<CreatePost> {
+	public async createPost(jwt: unknown, createPostDto: PostDto): Promise<CreatePost> {
 		const response = await getUserWithJwt(jwt)
 		if (response.status === 'error') {
 			return response
 		}
 
-		const validateResponse = validateCreatePostDto(createPostDto)
+		const validateResponse = validatePostDto(createPostDto)
 		if (validateResponse.status === 'error') {
 			return validateResponse
 		}

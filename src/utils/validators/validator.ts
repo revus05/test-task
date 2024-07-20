@@ -1,6 +1,7 @@
 type Options<Name> = {
 	name: Name
 	type: 'string'
+	required?: boolean
 	match?: number[] | string[]
 	notEmpty?: boolean
 	minLength?: number
@@ -18,7 +19,10 @@ export type ValidatorErrors<Name extends string> =
 	| `No ${Name} provided`
 
 const validator = <Name extends string>(value: unknown, options: Options<Name>): ValidatorErrors<Name> | null => {
-	if (typeof value === 'undefined') {
+	if (!options.required && typeof value === 'undefined') {
+		return null
+	}
+	if (options.required && typeof value === 'undefined') {
 		return `No ${options.name} provided`
 	}
 	if (typeof value !== options.type) {
