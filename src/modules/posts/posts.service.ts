@@ -24,6 +24,10 @@ type CreatePost =
 
 type GetPosts = ErrorResponse<'Unhandled error happened'> | SuccessResponse<'Successfully got all posts', Post[]>
 
+type GetPost =
+	| ErrorResponse<'Unhandled error happened' | 'Wrong id provided'>
+	| SuccessResponse<'Successfully got post', Post>
+
 @Injectable()
 export class PostsService {
 	public async createPost(jwt: unknown, createPostDto: CreatePostDto): Promise<CreatePost> {
@@ -69,5 +73,25 @@ export class PostsService {
 		}
 
 		return getSuccessMessage<'Successfully got all posts', Post[]>('Successfully got all posts', posts)
+	}
+
+	public async getPost(id: string): Promise<GetPost> {
+		const numericId = +id
+		if (!numericId) {
+			return getErrorMessage<'Wrong id provided'>('Wrong id provided')
+		}
+
+		let post: Post
+		try {
+			post = await prisma.post.findFirst({
+				where: {
+					id: numericId,
+				},
+			})
+		} catch (e) {
+			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+		}
+
+		return getSuccessMessage<'Successfully got post', Post>('Successfully got post', post)
 	}
 }

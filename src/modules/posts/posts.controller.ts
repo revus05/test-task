@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Req } from '@nestjs/common'
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common'
 import { CreatePostDto, PostsService } from './posts.service'
 import { Request } from 'express'
 
@@ -14,5 +14,10 @@ export class PostsController {
 	@Get()
 	async getPosts() {
 		return await this.postsService.getPosts()
+	}
+
+	@Get('/:id')
+	async getPost(@Param('id') id: string) {
+		return await this.postsService.getPost(id)
 	}
 }
