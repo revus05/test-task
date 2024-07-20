@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Req } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Req } from '@nestjs/common'
 import { PostsService } from './posts.service'
 import { Request } from 'express'
 import { PostDto } from '../../utils/validators/validatePostDto'
@@ -25,5 +25,10 @@ export class PostsController {
 	@Put('/:id')
 	async updatePost(@Req() req: Request, @Param('id') id: string, @Body() updatePostDto: PostDto) {
 		return await this.postsService.updatePost(req.cookies.jwt, id, updatePostDto)
+	}
+
+	@Delete('/:id')
+	async deletePost(@Req() req: Request, @Param('id') id: string) {
+		return await this.postsService.deletePost(req.cookies.jwt, id)
 	}
 }

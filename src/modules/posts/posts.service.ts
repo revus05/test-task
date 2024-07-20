@@ -28,6 +28,17 @@ type UpdatePost =
 	  >
 	| SuccessResponse<'Successfully updated post', Post>
 
+type DeletePost =
+	| ErrorResponse<
+			| 'Unhandled error happened'
+			| 'Wrong id provided'
+			| "You don't have such post"
+			| 'Unauthorized'
+			| 'You have no permissions for this query'
+			| 'No post with id you provided'
+	  >
+	| SuccessResponse<'Successfully deleted post', Post>
+
 @Injectable()
 export class PostsService {
 	public async createPost(jwt: unknown, createPostDto: PostDto): Promise<CreatePost> {
@@ -134,5 +145,50 @@ export class PostsService {
 		}
 
 		return getSuccessMessage<'Successfully updated post', Post>('Successfully updated post', updatedPost)
+	}
+
+	public async deletePost(jwt: unknown, id: string): Promise<DeletePost> {
+		const numericId = +id
+		if (!numericId) {
+			return getErrorMessage<'Wrong id provided'>('Wrong id provided')
+		}
+
+		const response = await getUserWithJwt(jwt)
+		if (response.status === 'error') {
+			return response
+		}
+
+		const user: Omit<User, 'password'> = response.data
+
+		const post: Post = await prisma.post.findFirst({
+			where: {
+				id: numericId,
+			},
+		})
+
+		if (!post) {
+			return getErrorMessage<'No post with id you provided'>('No post with id you provided')
+		}
+
+		if (user.role !== 'ADMIN' && post.userId !== user.id) {
+			return getErrorMessage<'You have no permissions for this query'>('You have no permissions for this query')
+		}
+
+		let deletedPost: Post
+		try {
+			deletedPost = await prisma.post.delete({
+				where: {
+					id: numericId,
+				},
+			})
+		} catch (e) {
+			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+		}
+
+		if (!deletedPost) {
+			return getErrorMessage<"You don't have such post">("You don't have such post")
+		}
+
+		return getSuccessMessage<'Successfully deleted post', Post>('Successfully deleted post', deletedPost)
 	}
 }
