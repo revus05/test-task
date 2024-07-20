@@ -8,6 +8,7 @@ import getUserWithJwt from '../../utils/getUserWithJwt'
 import handleUniqueConstraintError from '../../utils/handleUniqueConstraintError'
 import { ValidatorErrors } from '../../utils/validator'
 import validateUpdateDto from '../../utils/validateUpdateDto'
+import isUserOrAdmin from '../../utils/isUserOrAdmin'
 
 type GetUsers =
 	| ErrorResponse<'Unauthorized' | 'You have no permissions for this query'>
@@ -67,30 +68,12 @@ export class UsersService {
 	}
 
 	public async getUser(jwt: unknown, id: string): Promise<GetUser> {
-		const numericId = +id
-		if (!numericId) {
-			return getErrorMessage<'Wrong id provided'>('Wrong id provided')
-		}
-
-		const response = await getUserWithJwt(jwt)
+		const response = await isUserOrAdmin(jwt, id)
 		if (response.status === 'error') {
 			return response
 		}
 
-		const user: Omit<User, 'password'> = response.data
-
-		const queriedUser: Omit<User, 'password'> = await prisma.user.findFirst({
-			where: {
-				id: numericId,
-			},
-			omit: {
-				password: true,
-			},
-		})
-
-		if (user.role !== 'ADMIN' && queriedUser.id !== user.id) {
-			return getErrorMessage<'You have no permissions for this query'>('You have no permissions for this query')
-		}
+		const queriedUser = response.data
 
 		return getSuccessMessage<'Successfully got user', Omit<User, 'password'>>('Successfully got user', queriedUser)
 	}
