@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Req } from '@nestjs/common'
+import { Body, Controller, Get, Post, Req } from '@nestjs/common'
 import { CreatePostDto, PostsService } from './posts.service'
 import { Request } from 'express'
 
@@ -9,5 +9,10 @@ export class PostsController {
 	@Post()
 	async createPost(@Req() req: Request, @Body() createPostDto: CreatePostDto) {
 		return await this.postsService.createPost(req.cookies.jwt, createPostDto)
+	}
+
+	@Get()
+	async getPosts() {
+		return await this.postsService.getPosts()
 	}
 }

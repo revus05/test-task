@@ -22,6 +22,8 @@ type CreatePost =
 	| ErrorResponse<ValidatorErrors<'title' | 'content'>[] | 'Unauthorized' | 'Unhandled error happened'>
 	| SuccessResponse<'Successfully created post', Post>
 
+type GetPosts = ErrorResponse<'Unhandled error happened'> | SuccessResponse<'Successfully got all posts', Post[]>
+
 @Injectable()
 export class PostsService {
 	public async createPost(jwt: unknown, createPostDto: CreatePostDto): Promise<CreatePost> {
@@ -56,5 +58,16 @@ export class PostsService {
 		}
 
 		return getSuccessMessage<'Successfully created post', Post>('Successfully created post', newPost)
+	}
+
+	public async getPosts(): Promise<GetPosts> {
+		let posts: Post[]
+		try {
+			posts = await prisma.post.findMany({})
+		} catch (e) {
+			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+		}
+
+		return getSuccessMessage<'Successfully got all posts', Post[]>('Successfully got all posts', posts)
 	}
 }
