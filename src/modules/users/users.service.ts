@@ -123,4 +123,34 @@ export class UsersService {
 			updatedUser,
 		)
 	}
+
+	public async deleteUser(jwt: unknown, id: string) {
+		const response = await isUserOrAdmin(jwt, id)
+		if (response.status === 'error') {
+			return response
+		}
+
+		let deletedUser: Omit<User, 'password'>
+		try {
+			deletedUser = await prisma.user.delete({
+				where: {
+					id: +id,
+				},
+				omit: {
+					password: true,
+				},
+			})
+		} catch (e) {
+			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+		}
+
+		if (!deletedUser) {
+			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+		}
+
+		return getSuccessMessage<'Successfully deleted user', Omit<User, 'password'>>(
+			'Successfully deleted user',
+			deletedUser,
+		)
+	}
 }
