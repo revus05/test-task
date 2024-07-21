@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common'
-import prisma from '../../../prisma/client'
 import { User } from '@prisma/client'
 import getErrorMessage from '../../utils/getErrorMessage'
 import getSuccessMessage from '../../utils/getSuccessMessage'
@@ -9,6 +8,7 @@ import handleUniqueConstraintError from '../../utils/handleUniqueConstraintError
 import { ValidatorErrors } from '../../utils/validators/validator'
 import isUserOrAdmin from '../../utils/isUserOrAdmin'
 import validateUserDto, { UserDto } from '../../utils/validators/validateUserDto'
+import { PrismaService } from '../prisma/prisma.service'
 
 type GetUsers =
 	| ErrorResponse<'Unauthorized' | 'You have no permissions for this query'>
@@ -31,6 +31,8 @@ type UpdateUser =
 
 @Injectable()
 export class UsersService {
+	constructor(private prisma: PrismaService) {}
+
 	public async getUsers(jwt: unknown): Promise<GetUsers> {
 		const response = await getUserWithJwt(jwt)
 		if (response.status === 'error') {
@@ -43,7 +45,7 @@ export class UsersService {
 			return getErrorMessage<'You have no permissions for this query'>('You have no permissions for this query')
 		}
 
-		const users: Omit<User, 'password'>[] = await prisma.user.findMany({
+		const users: Omit<User, 'password'>[] = await this.prisma.user.findMany({
 			omit: {
 				password: true,
 			},
@@ -95,7 +97,7 @@ export class UsersService {
 
 		let updatedUser
 		try {
-			updatedUser = await prisma.user.update({
+			updatedUser = await this.prisma.user.update({
 				where: {
 					id: numericId,
 				},
@@ -124,7 +126,7 @@ export class UsersService {
 
 		let deletedUser: Omit<User, 'password'>
 		try {
-			deletedUser = await prisma.user.delete({
+			deletedUser = await this.prisma.user.delete({
 				where: {
 					id: +id,
 				},

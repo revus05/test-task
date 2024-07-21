@@ -1,10 +1,10 @@
 import getErrorMessage from './getErrorMessage'
-import prisma from '../../prisma/client'
 import { JWTPayload } from 'jsonwebtoken'
 import * as JWT from 'jsonwebtoken'
 import { ErrorResponse, SuccessResponse } from '../types/Response'
 import { User } from '@prisma/client'
 import getSuccessMessage from './getSuccessMessage'
+import { PrismaService } from '../modules/prisma/prisma.service'
 
 type GetUserWithJwt = ErrorResponse<'Unauthorized'> | SuccessResponse<'Successfully got user', Omit<User, 'password'>>
 
@@ -20,6 +20,7 @@ const getUserWithJwt = async (jwt: unknown): Promise<GetUserWithJwt> => {
 		return getErrorMessage<'Unauthorized'>('Unauthorized')
 	}
 
+	const prisma = new PrismaService()
 	const user: Omit<User, 'password'> = await prisma.user.findFirst({
 		where: {
 			id: payload.id,

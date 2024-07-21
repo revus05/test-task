@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common'
 import { ErrorResponse, SuccessResponse } from '../../../types/Response'
 import { $Enums, User } from '@prisma/client'
 import validateUserDto, { UserData, UserDtoValidationErrors } from '../../../utils/validators/validateUserDto'
-import prisma from '../../../../prisma/client'
 import * as bcrypt from 'bcryptjs'
 import getSuccessMessage from '../../../utils/getSuccessMessage'
 import getErrorMessage from '../../../utils/getErrorMessage'
 import handleUniqueConstraintError from '../../../utils/handleUniqueConstraintError'
+import { PrismaService } from '../../prisma/prisma.service'
 
 export type RegisterDto = {
 	email?: unknown
@@ -26,6 +26,7 @@ type RegisterUser =
 
 @Injectable()
 export class RegisterService {
+	constructor(private prisma: PrismaService) {}
 	public async registerUser(registerDto: RegisterDto) {
 		const validationResult = validateUserDto(registerDto)
 		if (validationResult.status !== 'ok') {
@@ -37,7 +38,7 @@ export class RegisterService {
 
 	private async createUser(data: RegisterData): Promise<RegisterUser> {
 		try {
-			const newUser: Omit<User, 'password'> = await prisma.user.create({
+			const newUser: Omit<User, 'password'> = await this.prisma.user.create({
 				data: {
 					email: data.email,
 					password: await bcrypt.hash(data.password, await bcrypt.genSalt(4)),

@@ -3,11 +3,11 @@ import { User } from '@prisma/client'
 import * as bcrypt from 'bcryptjs'
 import * as JWT from 'jsonwebtoken'
 import { ErrorResponse, SuccessResponse } from '../../../types/Response'
-import prisma from '../../../../prisma/client'
 import getErrorMessage from '../../../utils/getErrorMessage'
 import getSuccessMessage from '../../../utils/getSuccessMessage'
 import { ValidatorErrors } from '../../../utils/validators/validator'
 import validateLoginCredentialsDto from '../../../utils/validators/validateLoginDto'
+import { PrismaService } from '../../prisma/prisma.service'
 
 export type LoginCredentialsDto = {
 	email?: unknown
@@ -27,6 +27,8 @@ type Login =
 
 @Injectable()
 export class LoginService {
+	constructor(private prisma: PrismaService) {}
+
 	public async login(loginCredentialsDto: LoginCredentialsDto): Promise<Login> {
 		const validationResult = validateLoginCredentialsDto(loginCredentialsDto)
 		if (validationResult.status !== 'ok') {
@@ -39,7 +41,7 @@ export class LoginService {
 	private async getUser(credentials: LoginCredentials): Promise<Login> {
 		let user: User
 		try {
-			user = await prisma.user.findFirst({
+			user = await this.prisma.user.findFirst({
 				where: {
 					email: credentials.email,
 				},

@@ -2,11 +2,11 @@ import { Injectable } from '@nestjs/common'
 import getUserWithJwt from '../../utils/getUserWithJwt'
 import { Post, User } from '@prisma/client'
 import validatePostDto, { PostDto } from '../../utils/validators/validatePostDto'
-import prisma from '../../../prisma/client'
 import getErrorMessage from '../../utils/getErrorMessage'
 import getSuccessMessage from '../../utils/getSuccessMessage'
 import { ErrorResponse, SuccessResponse } from '../../types/Response'
 import { ValidatorErrors } from '../../utils/validators/validator'
+import { PrismaService } from '../prisma/prisma.service'
 
 type CreatePost =
 	| ErrorResponse<ValidatorErrors<'title' | 'content'>[] | 'Unauthorized' | 'Unhandled error happened'>
@@ -41,6 +41,7 @@ type DeletePost =
 
 @Injectable()
 export class PostsService {
+	constructor(private prisma: PrismaService) {}
 	public async createPost(jwt: unknown, createPostDto: PostDto): Promise<CreatePost> {
 		const response = await getUserWithJwt(jwt)
 		if (response.status === 'error') {
@@ -57,7 +58,7 @@ export class PostsService {
 
 		let newPost: Post
 		try {
-			newPost = await prisma.post.create({
+			newPost = await this.prisma.post.create({
 				data: {
 					title: postData.title,
 					content: postData.content,
@@ -78,7 +79,7 @@ export class PostsService {
 	public async getPosts(): Promise<GetPosts> {
 		let posts: Post[]
 		try {
-			posts = await prisma.post.findMany({})
+			posts = await this.prisma.post.findMany({})
 		} catch (e) {
 			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
 		}
@@ -94,7 +95,7 @@ export class PostsService {
 
 		let post: Post
 		try {
-			post = await prisma.post.findFirst({
+			post = await this.prisma.post.findFirst({
 				where: {
 					id: numericId,
 				},
@@ -129,7 +130,7 @@ export class PostsService {
 
 		let updatedPost: Post
 		try {
-			updatedPost = await prisma.post.update({
+			updatedPost = await this.prisma.post.update({
 				where: {
 					id: numericId,
 					userId: user.id,
@@ -160,7 +161,7 @@ export class PostsService {
 
 		const user: Omit<User, 'password'> = response.data
 
-		const post: Post = await prisma.post.findFirst({
+		const post: Post = await this.prisma.post.findFirst({
 			where: {
 				id: numericId,
 			},
@@ -176,7 +177,7 @@ export class PostsService {
 
 		let deletedPost: Post
 		try {
-			deletedPost = await prisma.post.delete({
+			deletedPost = await this.prisma.post.delete({
 				where: {
 					id: numericId,
 				},

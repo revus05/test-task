@@ -1,8 +1,8 @@
 import getErrorMessage from './getErrorMessage'
 import getUserWithJwt from './getUserWithJwt'
 import { User } from '@prisma/client'
-import prisma from '../../prisma/client'
 import getSuccessMessage from './getSuccessMessage'
+import { PrismaService } from '../modules/prisma/prisma.service'
 
 const isUserOrAdmin = async (jwt: unknown, id: string) => {
 	const numericId = +id
@@ -17,6 +17,7 @@ const isUserOrAdmin = async (jwt: unknown, id: string) => {
 
 	const user: Omit<User, 'password'> = response.data
 
+	const prisma = new PrismaService()
 	const queriedUser: Omit<User, 'password'> = await prisma.user.findFirst({
 		where: {
 			id: numericId,
