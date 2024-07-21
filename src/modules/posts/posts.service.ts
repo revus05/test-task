@@ -1,62 +1,26 @@
-import { Injectable } from '@nestjs/common'
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common'
 import getUserWithJwt from '../../utils/getUserWithJwt'
 import { Post, User } from '@prisma/client'
 import validatePostDto, { PostDto } from '../../utils/validators/validatePostDto'
-import getErrorMessage from '../../utils/getErrorMessage'
-import getSuccessMessage from '../../utils/getSuccessMessage'
-import { ErrorResponse, SuccessResponse } from '../../types/Response'
-import { ValidatorErrors } from '../../utils/validators/validator'
 import { PrismaService } from '../prisma/prisma.service'
 import handleNoElementError from '../../utils/handleNoElementError'
-
-type CreatePost =
-	| ErrorResponse<ValidatorErrors<'title' | 'content'>[] | 'Unauthorized' | 'Unhandled error happened'>
-	| SuccessResponse<'Successfully created post', Post>
-
-type GetPosts = ErrorResponse<'Unhandled error happened'> | SuccessResponse<'Successfully got all posts', Post[]>
-
-type GetPost =
-	| ErrorResponse<'Unhandled error happened' | 'Wrong id provided' | 'Post not found'>
-	| SuccessResponse<'Successfully got post', Post>
-
-type UpdatePost =
-	| ErrorResponse<
-			| ValidatorErrors<'title' | 'content'>[]
-			| 'Unauthorized'
-			| 'No post found'
-			| 'Wrong id provided'
-			| 'Unhandled error happened'
-			| 'You got no post with this id'
-	  >
-	| SuccessResponse<'Successfully updated post', Post>
-
-type DeletePost =
-	| ErrorResponse<
-			| 'Unhandled error happened'
-			| 'Wrong id provided'
-			| "You don't have such post"
-			| 'Unauthorized'
-			| 'You have no permissions for this query'
-			| 'No post with id you provided'
-	  >
-	| SuccessResponse<'Successfully deleted post', Post>
 
 @Injectable()
 export class PostsService {
 	constructor(private prisma: PrismaService) {}
-	public async createPost(jwt: unknown, createPostDto: PostDto): Promise<CreatePost> {
-		const response = await getUserWithJwt(jwt)
-		if (response.status === 'error') {
-			return response
+	public async createPost(jwt: unknown, createPostDto: PostDto): Promise<Post> {
+		const getUserWithJwtResponse = await getUserWithJwt(jwt)
+		if (getUserWithJwtResponse.status === 'error') {
+			throw new HttpException(getUserWithJwtResponse.message, HttpStatus.UNAUTHORIZED)
 		}
 
-		const validateResponse = validatePostDto(createPostDto)
-		if (validateResponse.status === 'error') {
-			return validateResponse
+		const validatePostDtoResponse = validatePostDto(createPostDto)
+		if (validatePostDtoResponse.status === 'error') {
+			throw new HttpException(validatePostDtoResponse.message, HttpStatus.BAD_REQUEST)
 		}
 
-		const user: Omit<User, 'password'> = response.data
-		const postData = validateResponse.data
+		const user: Omit<User, 'password'> = getUserWithJwtResponse.data
+		const postData = validatePostDtoResponse.data
 
 		let newPost: Post
 		try {
@@ -68,31 +32,31 @@ export class PostsService {
 				},
 			})
 		} catch (e) {
-			return getErrorMessage('Unhandled error happened')
+			throw new HttpException('Unhandled error happened', HttpStatus.INTERNAL_SERVER_ERROR)
 		}
 
 		if (!newPost) {
-			return getErrorMessage('Unhandled error happened')
+			throw new HttpException('Unhandled error happened', HttpStatus.INTERNAL_SERVER_ERROR)
 		}
 
-		return getSuccessMessage('Successfully created post', newPost)
+		return newPost
 	}
 
-	public async getPosts(): Promise<GetPosts> {
+	public async getPosts(): Promise<Post[]> {
 		let posts: Post[]
 		try {
 			posts = await this.prisma.post.findMany({})
 		} catch (e) {
-			return getErrorMessage('Unhandled error happened')
+			throw new HttpException('Error retrieving posts', HttpStatus.INTERNAL_SERVER_ERROR)
 		}
 
-		return getSuccessMessage('Successfully got all posts', posts)
+		return posts
 	}
 
-	public async getPost(id: string): Promise<GetPost> {
+	public async getPost(id: string): Promise<Post> {
 		const numericId = +id
 		if (!numericId) {
-			return getErrorMessage('Wrong id provided')
+			throw new HttpException('Wrong id provided', HttpStatus.BAD_REQUEST)
 		}
 
 		let post: Post
@@ -103,36 +67,36 @@ export class PostsService {
 				},
 			})
 		} catch (e) {
-			return getErrorMessage('Unhandled error happened')
+			throw new HttpException('Unhandled error happened', HttpStatus.INTERNAL_SERVER_ERROR)
 		}
 
 		if (!post) {
-			return getErrorMessage('Post not found')
+			throw new HttpException('Post not found', HttpStatus.BAD_REQUEST)
 		}
 
-		return getSuccessMessage('Successfully got post', post)
+		return post
 	}
 
-	public async updatePost(jwt: unknown, id: string, updatePostDto: PostDto): Promise<UpdatePost> {
+	public async updatePost(jwt: unknown, id: string, updatePostDto: PostDto): Promise<Post> {
 		const numericId = +id
 		if (!numericId) {
-			return getErrorMessage('Wrong id provided')
+			throw new HttpException('Wrong id provided', HttpStatus.BAD_REQUEST)
 		}
 
-		const response = await getUserWithJwt(jwt)
-		if (response.status === 'error') {
-			return response
+		const getUserWithJwtResponse = await getUserWithJwt(jwt)
+		if (getUserWithJwtResponse.status === 'error') {
+			throw new HttpException(getUserWithJwtResponse.message, HttpStatus.UNAUTHORIZED)
 		}
 
-		const validateResponse = validatePostDto(updatePostDto, {
+		const validatePostDtoResponse = validatePostDto(updatePostDto, {
 			title: false,
 			content: false,
 		})
-		if (validateResponse.status === 'error') {
-			return validateResponse
+		if (validatePostDtoResponse.status === 'error') {
+			throw new HttpException(validatePostDtoResponse.message, HttpStatus.BAD_REQUEST)
 		}
 
-		const user: Omit<User, 'password'> = response.data
+		const user: Omit<User, 'password'> = getUserWithJwtResponse.data
 
 		let updatedPost: Post
 		try {
@@ -141,31 +105,31 @@ export class PostsService {
 					id: numericId,
 					userId: user.id,
 				},
-				data: { ...validateResponse.data },
+				data: { ...validatePostDtoResponse.data },
 			})
 		} catch (e) {
-			return handleNoElementError<'post'>(e, 'post')
+			handleNoElementError<'post'>(e, 'post')
 		}
 
 		if (!updatedPost) {
-			return getErrorMessage('You got no post with this id')
+			throw new HttpException('You got no post with this id', HttpStatus.BAD_REQUEST)
 		}
 
-		return getSuccessMessage('Successfully updated post', updatedPost)
+		return updatedPost
 	}
 
-	public async deletePost(jwt: unknown, id: string): Promise<DeletePost> {
+	public async deletePost(jwt: unknown, id: string): Promise<Post> {
 		const numericId = +id
 		if (!numericId) {
-			return getErrorMessage('Wrong id provided')
+			throw new HttpException('Wrong id provided', HttpStatus.BAD_REQUEST)
 		}
 
-		const response = await getUserWithJwt(jwt)
-		if (response.status === 'error') {
-			return response
+		const getUserWithJwtResponse = await getUserWithJwt(jwt)
+		if (getUserWithJwtResponse.status === 'error') {
+			throw new HttpException(getUserWithJwtResponse.message, HttpStatus.UNAUTHORIZED)
 		}
 
-		const user: Omit<User, 'password'> = response.data
+		const user: Omit<User, 'password'> = getUserWithJwtResponse.data
 
 		let post: Post
 		try {
@@ -175,15 +139,15 @@ export class PostsService {
 				},
 			})
 		} catch (e) {
-			return getErrorMessage('Unhandled error happened')
+			throw new HttpException('Unhandled error happened', HttpStatus.INTERNAL_SERVER_ERROR)
 		}
 
 		if (!post) {
-			return getErrorMessage('No post with id you provided')
+			throw new HttpException('No post with id you provided', HttpStatus.BAD_REQUEST)
 		}
 
 		if (user.role !== 'ADMIN' && post.userId !== user.id) {
-			return getErrorMessage('You have no permissions for this query')
+			throw new HttpException('You have no permissions for this query', HttpStatus.FORBIDDEN)
 		}
 
 		let deletedPost: Post
@@ -194,13 +158,13 @@ export class PostsService {
 				},
 			})
 		} catch (e) {
-			return getErrorMessage('Unhandled error happened')
+			throw new HttpException('Unhandled error happened', HttpStatus.INTERNAL_SERVER_ERROR)
 		}
 
 		if (!deletedPost) {
-			return getErrorMessage("You don't have such post")
+			throw new HttpException("You don't have such post", HttpStatus.BAD_REQUEST)
 		}
 
-		return getSuccessMessage('Successfully deleted post', deletedPost)
+		return deletedPost
 	}
 }

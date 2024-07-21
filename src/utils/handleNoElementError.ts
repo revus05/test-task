@@ -1,16 +1,13 @@
 import { Prisma } from '@prisma/client'
-import getErrorMessage from './getErrorMessage'
-import { ErrorResponse } from '../types/Response'
+import { HttpException, HttpStatus } from '@nestjs/common'
 
-type HandleNoElementError<Name extends string> = ErrorResponse<`No ${Name} found` | 'Unhandled error happened'>
-
-const handleNoElementError = <Name extends string>(error: unknown, name: Name): HandleNoElementError<Name> => {
+const handleNoElementError = <Name extends string>(error: unknown, name: Name) => {
 	if (error instanceof Prisma.PrismaClientKnownRequestError) {
 		if (error.code === 'P2025') {
-			return getErrorMessage<`No ${Name} found`>(`No ${name} found`)
+			throw new HttpException(`No ${name} found`, HttpStatus.BAD_REQUEST)
 		}
 	}
-	return getErrorMessage('Unhandled error happened')
+	throw new HttpException('Unhandled error happened', HttpStatus.INTERNAL_SERVER_ERROR)
 }
 
 export default handleNoElementError
