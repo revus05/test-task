@@ -1,16 +1,17 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Put, Req, Res } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpStatus, Param, Put, Query, Req, Res } from '@nestjs/common'
 import { UsersService } from './users.service'
 import { Request, Response } from 'express'
 import { UserDto } from '../../utils/validators/validateUserDto'
 import getSuccessMessage from '../../utils/getSuccessMessage'
+import { PaginationDto } from '../pagination.dto'
 
 @Controller('users')
 export class UsersController {
 	constructor(private readonly usersService: UsersService) {}
 
 	@Get()
-	async getUsers(@Req() req: Request, @Res() res: Response) {
-		const users = await this.usersService.getUsers(req.cookies?.jwt)
+	async getUsers(@Req() req: Request, @Res() res: Response, @Query() paginationDto: PaginationDto) {
+		const users = await this.usersService.getUsers(req.cookies?.jwt, paginationDto)
 		res.status(HttpStatus.OK).json(getSuccessMessage('Successfully got all users', users))
 	}
 

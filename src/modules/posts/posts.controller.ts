@@ -1,11 +1,10 @@
-import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Req, Res, UseInterceptors } from '@nestjs/common'
+import { Body, Controller, Delete, Get, HttpStatus, Param, Post, Put, Query, Req, Res } from '@nestjs/common'
 import { PostsService } from './posts.service'
 import { Request, Response } from 'express'
 import { PostDto } from '../../utils/validators/validatePostDto'
-import { CacheInterceptor } from '@nestjs/cache-manager'
 import getSuccessMessage from '../../utils/getSuccessMessage'
+import { PaginationDto } from '../pagination.dto'
 
-@UseInterceptors(CacheInterceptor)
 @Controller('posts')
 export class PostsController {
 	constructor(private readonly postsService: PostsService) {}
@@ -17,8 +16,8 @@ export class PostsController {
 	}
 
 	@Get()
-	async getPosts(@Res() res: Response) {
-		const posts = await this.postsService.getPosts()
+	async getPosts(@Res() res: Response, @Query() paginationDto: PaginationDto) {
+		const posts = await this.postsService.getPosts(paginationDto)
 		res.status(HttpStatus.OK).json(getSuccessMessage('Successfully got all posts', posts))
 	}
 

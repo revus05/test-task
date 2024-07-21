@@ -4,6 +4,7 @@ import { Post, User } from '@prisma/client'
 import validatePostDto, { PostDto } from '../../utils/validators/validatePostDto'
 import { PrismaService } from '../prisma/prisma.service'
 import handleNoElementError from '../../utils/handleNoElementError'
+import { PaginationDto } from '../pagination.dto'
 
 @Injectable()
 export class PostsService {
@@ -42,10 +43,32 @@ export class PostsService {
 		return newPost
 	}
 
-	public async getPosts(): Promise<Post[]> {
+	public async getPosts(paginationDto: PaginationDto): Promise<Post[]> {
+		const { page = 1, limit = 10, search = '' } = paginationDto
+		const skip = (page - 1) * limit
+
 		let posts: Post[]
 		try {
-			posts = await this.prisma.post.findMany({})
+			posts = await this.prisma.post.findMany({
+				skip,
+				take: +limit,
+				where: search
+					? {
+							OR: [
+								{
+									title: {
+										contains: search,
+									},
+								},
+								{
+									content: {
+										contains: search,
+									},
+								},
+							],
+						}
+					: {},
+			})
 		} catch (e) {
 			throw new HttpException('Error retrieving posts', HttpStatus.INTERNAL_SERVER_ERROR)
 		}

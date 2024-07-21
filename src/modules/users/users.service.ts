@@ -5,12 +5,13 @@ import handleUniqueConstraintError from '../../utils/handleUniqueConstraintError
 import isUserOrAdmin from '../../utils/isUserOrAdmin'
 import validateUserDto, { UserDto } from '../../utils/validators/validateUserDto'
 import { PrismaService } from '../prisma/prisma.service'
+import { PaginationDto } from '../pagination.dto'
 
 @Injectable()
 export class UsersService {
 	constructor(private prisma: PrismaService) {}
 
-	public async getUsers(jwt: unknown): Promise<Omit<User, 'password'>[]> {
+	public async getUsers(jwt: unknown, paginationDto: PaginationDto): Promise<Omit<User, 'password'>[]> {
 		const getUserWithJwtResponse = await getUserWithJwt(jwt)
 		if (getUserWithJwtResponse.status === 'error') {
 			throw new HttpException(getUserWithJwtResponse.message, HttpStatus.UNAUTHORIZED)
@@ -24,16 +25,31 @@ export class UsersService {
 
 		let users: Omit<User, 'password'>[]
 		try {
+			const { page = 1, limit = 10, search = '' } = paginationDto
+			const skip = (page - 1) * limit
 			users = await this.prisma.user.findMany({
 				omit: {
 					password: true,
 				},
+				skip,
+				take: +limit,
+				where: search
+					? {
+							OR: [
+								{
+									email: {
+										contains: search,
+									},
+								},
+							],
+						}
+					: {},
 			})
 		} catch (e) {
 			throw new HttpException('Unhandled error happened', HttpStatus.INTERNAL_SERVER_ERROR)
 		}
 
-		if (!users) {
+		if (!users.length) {
 			throw new HttpException('No users found', HttpStatus.BAD_REQUEST)
 		}
 
