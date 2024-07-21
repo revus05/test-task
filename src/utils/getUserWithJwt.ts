@@ -21,7 +21,7 @@ const getUserWithJwt = async (jwt: unknown): Promise<GetUserWithJwt> => {
 	}
 
 	const prisma = new PrismaService()
-	const user: Omit<User, 'password'> = await prisma.user.findFirst({
+	const user: Omit<User, 'password'> = await prisma.user.findUnique({
 		where: {
 			id: payload.id,
 		},

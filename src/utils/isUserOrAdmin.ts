@@ -18,7 +18,7 @@ const isUserOrAdmin = async (jwt: unknown, id: string) => {
 	const user: Omit<User, 'password'> = response.data
 
 	const prisma = new PrismaService()
-	const queriedUser: Omit<User, 'password'> = await prisma.user.findFirst({
+	const queriedUser: Omit<User, 'password'> = await prisma.user.findUnique({
 		where: {
 			id: numericId,
 		},

@@ -95,7 +95,7 @@ export class PostsService {
 
 		let post: Post
 		try {
-			post = await this.prisma.post.findFirst({
+			post = await this.prisma.post.findUnique({
 				where: {
 					id: numericId,
 				},
@@ -161,7 +161,7 @@ export class PostsService {
 
 		const user: Omit<User, 'password'> = response.data
 
-		const post: Post = await this.prisma.post.findFirst({
+		const post: Post = await this.prisma.post.findUnique({
 			where: {
 				id: numericId,
 			},

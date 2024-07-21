@@ -41,7 +41,7 @@ export class LoginService {
 	private async getUser(credentials: LoginCredentials): Promise<Login> {
 		let user: User
 		try {
-			user = await this.prisma.user.findFirst({
+			user = await this.prisma.user.findUnique({
 				where: {
 					email: credentials.email,
 				},
