@@ -7,6 +7,7 @@ import getSuccessMessage from '../../utils/getSuccessMessage'
 import { ErrorResponse, SuccessResponse } from '../../types/Response'
 import { ValidatorErrors } from '../../utils/validators/validator'
 import { PrismaService } from '../prisma/prisma.service'
+import handleNoElementError from '../../utils/handleNoElementError'
 
 type CreatePost =
 	| ErrorResponse<ValidatorErrors<'title' | 'content'>[] | 'Unauthorized' | 'Unhandled error happened'>
@@ -15,13 +16,14 @@ type CreatePost =
 type GetPosts = ErrorResponse<'Unhandled error happened'> | SuccessResponse<'Successfully got all posts', Post[]>
 
 type GetPost =
-	| ErrorResponse<'Unhandled error happened' | 'Wrong id provided'>
+	| ErrorResponse<'Unhandled error happened' | 'Wrong id provided' | 'Post not found'>
 	| SuccessResponse<'Successfully got post', Post>
 
 type UpdatePost =
 	| ErrorResponse<
 			| ValidatorErrors<'title' | 'content'>[]
 			| 'Unauthorized'
+			| 'No post found'
 			| 'Wrong id provided'
 			| 'Unhandled error happened'
 			| 'You got no post with this id'
@@ -104,6 +106,10 @@ export class PostsService {
 			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
 		}
 
+		if (!post) {
+			return getErrorMessage<'Post not found'>('Post not found')
+		}
+
 		return getSuccessMessage<'Successfully got post', Post>('Successfully got post', post)
 	}
 
@@ -138,7 +144,7 @@ export class PostsService {
 				data: { ...validateResponse.data },
 			})
 		} catch (e) {
-			return getErrorMessage('Unhandled error happened')
+			return handleNoElementError<'post'>(e, 'post')
 		}
 
 		if (!updatedPost) {
@@ -161,11 +167,16 @@ export class PostsService {
 
 		const user: Omit<User, 'password'> = response.data
 
-		const post: Post = await this.prisma.post.findUnique({
-			where: {
-				id: numericId,
-			},
-		})
+		let post: Post
+		try {
+			post = await this.prisma.post.findUnique({
+				where: {
+					id: numericId,
+				},
+			})
+		} catch (e) {
+			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+		}
 
 		if (!post) {
 			return getErrorMessage<'No post with id you provided'>('No post with id you provided')
