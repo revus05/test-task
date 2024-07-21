@@ -46,7 +46,7 @@ const validatePostDto = (
 	if (errors.length) {
 		return getErrorMessage<ValidatorErrors<'title' | 'content'>[]>(errors)
 	}
-	return getSuccessMessage<'Post data is valid', CreatePostData>('Post data is valid', result as CreatePostData)
+	return getSuccessMessage('Post data is valid', result as CreatePostData)
 }
 
 export default validatePostDto

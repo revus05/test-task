@@ -3,11 +3,21 @@ import getUserWithJwt from './getUserWithJwt'
 import { User } from '@prisma/client'
 import getSuccessMessage from './getSuccessMessage'
 import { PrismaService } from '../modules/prisma/prisma.service'
+import { ErrorResponse, SuccessResponse } from '../types/Response'
 
-const isUserOrAdmin = async (jwt: unknown, id: string) => {
+export type IsUserOrAdminErrors =
+	| 'Unhandled error happened'
+	| 'No user found'
+	| 'You have no permissions for this query'
+	| 'Wrong id provided'
+	| 'Unauthorized'
+
+type IsUserOrAdmin = ErrorResponse<IsUserOrAdminErrors> | SuccessResponse<'User has access', Omit<User, 'password'>>
+
+const isUserOrAdmin = async (jwt: unknown, id: string): Promise<IsUserOrAdmin> => {
 	const numericId = +id
 	if (!numericId) {
-		return getErrorMessage<'Wrong id provided'>('Wrong id provided')
+		return getErrorMessage('Wrong id provided')
 	}
 
 	const response = await getUserWithJwt(jwt)
@@ -29,18 +39,18 @@ const isUserOrAdmin = async (jwt: unknown, id: string) => {
 			},
 		})
 	} catch (e) {
-		return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+		return getErrorMessage('Unhandled error happened')
 	}
 
 	if (!queriedUser) {
-		return getErrorMessage<'No user found'>('No user found')
+		return getErrorMessage('No user found')
 	}
 
 	if (user.role !== 'ADMIN' && queriedUser.id !== user.id) {
-		return getErrorMessage<'You have no permissions for this query'>('You have no permissions for this query')
+		return getErrorMessage('You have no permissions for this query')
 	}
 
-	return getSuccessMessage<'User has access', Omit<User, 'password'>>('User has access', queriedUser)
+	return getSuccessMessage('User has access', queriedUser)
 }
 
 export default isUserOrAdmin

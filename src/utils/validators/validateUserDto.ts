@@ -61,7 +61,7 @@ const validateUserDto = (
 	if (errors.length) {
 		return getErrorMessage<UserDtoValidationErrors[]>(errors)
 	}
-	return getSuccessMessage<'User data is valid', Partial<UserData>>('User data is valid', result)
+	return getSuccessMessage('User data is valid', result)
 }
 
 export default validateUserDto

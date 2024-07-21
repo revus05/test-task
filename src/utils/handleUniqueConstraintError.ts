@@ -1,13 +1,16 @@
 import { Prisma } from '@prisma/client'
 import getErrorMessage from './getErrorMessage'
+import { ErrorResponse } from '../types/Response'
 
-const handleUniqueConstraintError = (error: unknown) => {
+export type UniqueConstraintError = 'User with this email already existing' | 'Unhandled error happened'
+
+const handleUniqueConstraintError = (error: unknown): ErrorResponse<UniqueConstraintError> => {
 	if (error instanceof Prisma.PrismaClientKnownRequestError) {
 		if (error.code === 'P2002') {
-			return getErrorMessage<`User with this email already existing`>(`User with this email already existing`)
+			return getErrorMessage(`User with this email already existing`)
 		}
 	}
-	return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+	return getErrorMessage('Unhandled error happened')
 }
 
 export default handleUniqueConstraintError

@@ -68,14 +68,14 @@ export class PostsService {
 				},
 			})
 		} catch (e) {
-			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+			return getErrorMessage('Unhandled error happened')
 		}
 
 		if (!newPost) {
-			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+			return getErrorMessage('Unhandled error happened')
 		}
 
-		return getSuccessMessage<'Successfully created post', Post>('Successfully created post', newPost)
+		return getSuccessMessage('Successfully created post', newPost)
 	}
 
 	public async getPosts(): Promise<GetPosts> {
@@ -83,16 +83,16 @@ export class PostsService {
 		try {
 			posts = await this.prisma.post.findMany({})
 		} catch (e) {
-			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+			return getErrorMessage('Unhandled error happened')
 		}
 
-		return getSuccessMessage<'Successfully got all posts', Post[]>('Successfully got all posts', posts)
+		return getSuccessMessage('Successfully got all posts', posts)
 	}
 
 	public async getPost(id: string): Promise<GetPost> {
 		const numericId = +id
 		if (!numericId) {
-			return getErrorMessage<'Wrong id provided'>('Wrong id provided')
+			return getErrorMessage('Wrong id provided')
 		}
 
 		let post: Post
@@ -103,20 +103,20 @@ export class PostsService {
 				},
 			})
 		} catch (e) {
-			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+			return getErrorMessage('Unhandled error happened')
 		}
 
 		if (!post) {
-			return getErrorMessage<'Post not found'>('Post not found')
+			return getErrorMessage('Post not found')
 		}
 
-		return getSuccessMessage<'Successfully got post', Post>('Successfully got post', post)
+		return getSuccessMessage('Successfully got post', post)
 	}
 
 	public async updatePost(jwt: unknown, id: string, updatePostDto: PostDto): Promise<UpdatePost> {
 		const numericId = +id
 		if (!numericId) {
-			return getErrorMessage<'Wrong id provided'>('Wrong id provided')
+			return getErrorMessage('Wrong id provided')
 		}
 
 		const response = await getUserWithJwt(jwt)
@@ -148,16 +148,16 @@ export class PostsService {
 		}
 
 		if (!updatedPost) {
-			return getErrorMessage<'You got no post with this id'>('You got no post with this id')
+			return getErrorMessage('You got no post with this id')
 		}
 
-		return getSuccessMessage<'Successfully updated post', Post>('Successfully updated post', updatedPost)
+		return getSuccessMessage('Successfully updated post', updatedPost)
 	}
 
 	public async deletePost(jwt: unknown, id: string): Promise<DeletePost> {
 		const numericId = +id
 		if (!numericId) {
-			return getErrorMessage<'Wrong id provided'>('Wrong id provided')
+			return getErrorMessage('Wrong id provided')
 		}
 
 		const response = await getUserWithJwt(jwt)
@@ -175,15 +175,15 @@ export class PostsService {
 				},
 			})
 		} catch (e) {
-			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+			return getErrorMessage('Unhandled error happened')
 		}
 
 		if (!post) {
-			return getErrorMessage<'No post with id you provided'>('No post with id you provided')
+			return getErrorMessage('No post with id you provided')
 		}
 
 		if (user.role !== 'ADMIN' && post.userId !== user.id) {
-			return getErrorMessage<'You have no permissions for this query'>('You have no permissions for this query')
+			return getErrorMessage('You have no permissions for this query')
 		}
 
 		let deletedPost: Post
@@ -194,13 +194,13 @@ export class PostsService {
 				},
 			})
 		} catch (e) {
-			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+			return getErrorMessage('Unhandled error happened')
 		}
 
 		if (!deletedPost) {
-			return getErrorMessage<"You don't have such post">("You don't have such post")
+			return getErrorMessage("You don't have such post")
 		}
 
-		return getSuccessMessage<'Successfully deleted post', Post>('Successfully deleted post', deletedPost)
+		return getSuccessMessage('Successfully deleted post', deletedPost)
 	}
 }

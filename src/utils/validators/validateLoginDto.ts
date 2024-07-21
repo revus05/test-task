@@ -4,10 +4,15 @@ import getSuccessMessage from '../getSuccessMessage'
 import emailValidator from './emailValidator'
 import passwordValidator from './passwordValidator'
 import { LoginCredentials, LoginCredentialsDto } from '../../modules/auth/login/login.service'
+import { ErrorResponse, SuccessResponse } from '../../types/Response'
 
 export type LoginCredentialsValidationErrors = ValidatorErrors<'email' | 'password'>
 
-const validateLoginCredentialsDto = (loginCredentialsDto: LoginCredentialsDto) => {
+const validateLoginCredentialsDto = (
+	loginCredentialsDto: LoginCredentialsDto,
+):
+	| ErrorResponse<LoginCredentialsValidationErrors[]>
+	| SuccessResponse<'Login credentials is valid', LoginCredentials> => {
 	const result: Partial<LoginCredentials> = {}
 	const errors: LoginCredentialsValidationErrors[] = []
 
@@ -28,10 +33,7 @@ const validateLoginCredentialsDto = (loginCredentialsDto: LoginCredentialsDto) =
 	if (errors.length) {
 		return getErrorMessage<LoginCredentialsValidationErrors[]>(errors)
 	}
-	return getSuccessMessage<'Login credentials is valid', LoginCredentials>(
-		'Login credentials is valid',
-		result as LoginCredentials,
-	)
+	return getSuccessMessage('Login credentials is valid', result as LoginCredentials)
 }
 
 export default validateLoginCredentialsDto

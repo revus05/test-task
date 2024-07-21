@@ -47,20 +47,20 @@ export class LoginService {
 				},
 			})
 		} catch (e) {
-			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+			return getErrorMessage('Unhandled error happened')
 		}
 		if (!user) {
-			return getErrorMessage<'No user with your credentials found'>('No user with your credentials found')
+			return getErrorMessage('No user with your credentials found')
 		}
 
 		if (await bcrypt.compare(credentials.password, user.password)) {
 			delete user.password
-			return getSuccessMessage<'User logged in successfully', { user: Omit<User, 'password'>; jwt: JWT }>(
-				'User logged in successfully',
-				{ user, jwt: JWT.sign({ id: user.id }, process.env.SECRET, { expiresIn: '30d' }) },
-			)
+			return getSuccessMessage('User logged in successfully', {
+				user,
+				jwt: JWT.sign({ id: user.id }, process.env.SECRET, { expiresIn: '30d' }),
+			})
 		}
 
-		return getErrorMessage<'No user with your credentials found'>('No user with your credentials found')
+		return getErrorMessage('No user with your credentials found')
 	}
 }

@@ -5,7 +5,7 @@ import validateUserDto, { UserData, UserDtoValidationErrors } from '../../../uti
 import * as bcrypt from 'bcryptjs'
 import getSuccessMessage from '../../../utils/getSuccessMessage'
 import getErrorMessage from '../../../utils/getErrorMessage'
-import handleUniqueConstraintError from '../../../utils/handleUniqueConstraintError'
+import handleUniqueConstraintError, { UniqueConstraintError } from '../../../utils/handleUniqueConstraintError'
 import { PrismaService } from '../../prisma/prisma.service'
 
 export type RegisterDto = {
@@ -21,7 +21,7 @@ export type RegisterData = {
 }
 
 type RegisterUser =
-	| ErrorResponse<UserDtoValidationErrors[] | `Unhandled error happened` | `User with this email already existing`>
+	| ErrorResponse<UserDtoValidationErrors[] | UniqueConstraintError>
 	| SuccessResponse<'User registered successfully', Omit<User, 'password'>>
 
 @Injectable()
@@ -49,10 +49,7 @@ export class RegisterService {
 				},
 			})
 			if (newUser) {
-				return getSuccessMessage<'User registered successfully', Omit<User, 'password'>>(
-					'User registered successfully',
-					newUser,
-				)
+				return getSuccessMessage('User registered successfully', newUser)
 			}
 		} catch (error) {
 			return handleUniqueConstraintError(error)

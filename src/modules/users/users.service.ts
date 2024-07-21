@@ -3,46 +3,31 @@ import { User } from '@prisma/client'
 import getErrorMessage from '../../utils/getErrorMessage'
 import getSuccessMessage from '../../utils/getSuccessMessage'
 import { ErrorResponse, SuccessResponse } from '../../types/Response'
-import getUserWithJwt from '../../utils/getUserWithJwt'
-import handleUniqueConstraintError from '../../utils/handleUniqueConstraintError'
+import getUserWithJwt, { GetUserWithJwtErrors } from '../../utils/getUserWithJwt'
+import handleUniqueConstraintError, { UniqueConstraintError } from '../../utils/handleUniqueConstraintError'
 import { ValidatorErrors } from '../../utils/validators/validator'
-import isUserOrAdmin from '../../utils/isUserOrAdmin'
+import isUserOrAdmin, { IsUserOrAdminErrors } from '../../utils/isUserOrAdmin'
 import validateUserDto, { UserDto } from '../../utils/validators/validateUserDto'
 import { PrismaService } from '../prisma/prisma.service'
 
 type GetUsers =
-	| ErrorResponse<'Unauthorized' | 'You have no permissions for this query'>
+	| ErrorResponse<GetUserWithJwtErrors | 'You have no permissions for this query'>
 	| SuccessResponse<'Successfully got all users', Omit<User, 'password'>[]>
 
-type GetUser =
-	| ErrorResponse<
-			| 'Unauthorized'
-			| 'You have no permissions for this query'
-			| 'Wrong id provided'
-			| 'No user found'
-			| 'Unhandled error happened'
-	  >
-	| SuccessResponse<'Successfully got user', Omit<User, 'password'>>
+type GetUser = ErrorResponse<IsUserOrAdminErrors> | SuccessResponse<'Successfully got user', Omit<User, 'password'>>
 
 type UpdateUser =
 	| ErrorResponse<
 			| ValidatorErrors<'email' | 'password' | 'role'>[]
-			| 'Unhandled error happened'
-			| 'User with this email already existing'
-			| 'Unauthorized'
+			| UniqueConstraintError
+			| GetUserWithJwtErrors
 			| 'You have no permissions for this query'
 			| 'Wrong id provided'
 	  >
 	| SuccessResponse<'Successfully updated user', Omit<User, 'password'>>
 
 type DeleteUser =
-	| ErrorResponse<
-			| 'Unhandled error happened'
-			| 'No user found'
-			| 'Unauthorized'
-			| 'You have no permissions for this query'
-			| 'Wrong id provided'
-	  >
+	| ErrorResponse<IsUserOrAdminErrors | 'Unhandled error happened' | 'No user found'>
 	| SuccessResponse<'Successfully deleted user', Omit<User, 'password'>>
 
 @Injectable()
@@ -58,7 +43,7 @@ export class UsersService {
 		const user: Omit<User, 'password'> = response.data
 
 		if (user.role !== 'ADMIN') {
-			return getErrorMessage<'You have no permissions for this query'>('You have no permissions for this query')
+			return getErrorMessage('You have no permissions for this query')
 		}
 
 		const users: Omit<User, 'password'>[] = await this.prisma.user.findMany({
@@ -67,10 +52,7 @@ export class UsersService {
 			},
 		})
 
-		return getSuccessMessage<'Successfully got all users', Omit<User, 'password'>[]>(
-			'Successfully got all users',
-			users,
-		)
+		return getSuccessMessage('Successfully got all users', users)
 	}
 
 	public async getUser(jwt: unknown, id: string): Promise<GetUser> {
@@ -81,13 +63,13 @@ export class UsersService {
 
 		const queriedUser: Omit<User, 'password'> = response.data
 
-		return getSuccessMessage<'Successfully got user', Omit<User, 'password'>>('Successfully got user', queriedUser)
+		return getSuccessMessage('Successfully got user', queriedUser)
 	}
 
 	public async updateUser(jwt: unknown, id: string, updateBodyDto: UserDto): Promise<UpdateUser> {
 		const numericId = +id
 		if (!numericId) {
-			return getErrorMessage<'Wrong id provided'>('Wrong id provided')
+			return getErrorMessage('Wrong id provided')
 		}
 
 		const response = await getUserWithJwt(jwt)
@@ -97,7 +79,7 @@ export class UsersService {
 		const user: Omit<User, 'password'> = response.data
 
 		if (user.id !== numericId && user.role !== 'ADMIN') {
-			return getErrorMessage<'You have no permissions for this query'>('You have no permissions for this query')
+			return getErrorMessage('You have no permissions for this query')
 		}
 
 		const validationResponse = await validateUserDto(updateBodyDto, {
@@ -128,10 +110,7 @@ export class UsersService {
 			return handleUniqueConstraintError(e)
 		}
 
-		return getSuccessMessage<'Successfully updated user', Omit<User, 'password'>>(
-			'Successfully updated user',
-			updatedUser,
-		)
+		return getSuccessMessage('Successfully updated user', updatedUser)
 	}
 
 	public async deleteUser(jwt: unknown, id: string): Promise<DeleteUser> {
@@ -151,16 +130,13 @@ export class UsersService {
 				},
 			})
 		} catch (e) {
-			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+			return getErrorMessage('Unhandled error happened')
 		}
 
 		if (!deletedUser) {
-			return getErrorMessage<'No user found'>('No user found')
+			return getErrorMessage('No user found')
 		}
 
-		return getSuccessMessage<'Successfully deleted user', Omit<User, 'password'>>(
-			'Successfully deleted user',
-			deletedUser,
-		)
+		return getSuccessMessage('Successfully deleted user', deletedUser)
 	}
 }

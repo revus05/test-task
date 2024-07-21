@@ -10,7 +10,7 @@ const handleNoElementError = <Name extends string>(error: unknown, name: Name): 
 			return getErrorMessage<`No ${Name} found`>(`No ${name} found`)
 		}
 	}
-	return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+	return getErrorMessage('Unhandled error happened')
 }
 
 export default handleNoElementError
