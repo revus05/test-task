@@ -2,12 +2,18 @@ import { Module } from '@nestjs/common'
 import { UsersModule } from './users/users.module'
 import { AuthModule } from './auth/auth.app'
 import { PostsModule } from './posts/posts.module'
-import { PostsController } from './posts/posts.controller'
-import { PostsService } from './posts/posts.service'
+import { CacheModule } from '@nestjs/cache-manager'
 
 @Module({
-	imports: [AuthModule, UsersModule, PostsModule],
-	controllers: [PostsController],
-	providers: [PostsService],
+	imports: [
+		CacheModule.register({
+			ttl: 10,
+			max: 1024,
+			isGlobal: true,
+		}),
+		AuthModule,
+		UsersModule,
+		PostsModule,
+	],
 })
 export class AppModule {}

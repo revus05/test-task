@@ -1,8 +1,10 @@
-import { Body, Controller, Delete, Get, Param, Post, Put, Req } from '@nestjs/common'
+import { Body, Controller, Delete, Get, Param, Post, Put, Req, UseInterceptors } from '@nestjs/common'
 import { PostsService } from './posts.service'
 import { Request } from 'express'
 import { PostDto } from '../../utils/validators/validatePostDto'
+import { CacheInterceptor } from '@nestjs/cache-manager'
 
+@UseInterceptors(CacheInterceptor)
 @Controller('posts')
 export class PostsController {
 	constructor(private readonly postsService: PostsService) {}
