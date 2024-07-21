@@ -15,7 +15,13 @@ type GetUsers =
 	| SuccessResponse<'Successfully got all users', Omit<User, 'password'>[]>
 
 type GetUser =
-	| ErrorResponse<'Unauthorized' | 'You have no permissions for this query' | 'Wrong id provided'>
+	| ErrorResponse<
+			| 'Unauthorized'
+			| 'You have no permissions for this query'
+			| 'Wrong id provided'
+			| 'No user found'
+			| 'Unhandled error happened'
+	  >
 	| SuccessResponse<'Successfully got user', Omit<User, 'password'>>
 
 type UpdateUser =
@@ -28,6 +34,16 @@ type UpdateUser =
 			| 'Wrong id provided'
 	  >
 	| SuccessResponse<'Successfully updated user', Omit<User, 'password'>>
+
+type DeleteUser =
+	| ErrorResponse<
+			| 'Unhandled error happened'
+			| 'No user found'
+			| 'Unauthorized'
+			| 'You have no permissions for this query'
+			| 'Wrong id provided'
+	  >
+	| SuccessResponse<'Successfully deleted user', Omit<User, 'password'>>
 
 @Injectable()
 export class UsersService {
@@ -63,7 +79,7 @@ export class UsersService {
 			return response
 		}
 
-		const queriedUser = response.data
+		const queriedUser: Omit<User, 'password'> = response.data
 
 		return getSuccessMessage<'Successfully got user', Omit<User, 'password'>>('Successfully got user', queriedUser)
 	}
@@ -118,7 +134,7 @@ export class UsersService {
 		)
 	}
 
-	public async deleteUser(jwt: unknown, id: string) {
+	public async deleteUser(jwt: unknown, id: string): Promise<DeleteUser> {
 		const response = await isUserOrAdmin(jwt, id)
 		if (response.status === 'error') {
 			return response
@@ -139,7 +155,7 @@ export class UsersService {
 		}
 
 		if (!deletedUser) {
-			return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+			return getErrorMessage<'No user found'>('No user found')
 		}
 
 		return getSuccessMessage<'Successfully deleted user', Omit<User, 'password'>>(

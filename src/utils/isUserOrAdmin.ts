@@ -18,14 +18,23 @@ const isUserOrAdmin = async (jwt: unknown, id: string) => {
 	const user: Omit<User, 'password'> = response.data
 
 	const prisma = new PrismaService()
-	const queriedUser: Omit<User, 'password'> = await prisma.user.findUnique({
-		where: {
-			id: numericId,
-		},
-		omit: {
-			password: true,
-		},
-	})
+	let queriedUser: Omit<User, 'password'>
+	try {
+		queriedUser = await prisma.user.findUnique({
+			where: {
+				id: numericId,
+			},
+			omit: {
+				password: true,
+			},
+		})
+	} catch (e) {
+		return getErrorMessage<'Unhandled error happened'>('Unhandled error happened')
+	}
+
+	if (!queriedUser) {
+		return getErrorMessage<'No user found'>('No user found')
+	}
 
 	if (user.role !== 'ADMIN' && queriedUser.id !== user.id) {
 		return getErrorMessage<'You have no permissions for this query'>('You have no permissions for this query')
