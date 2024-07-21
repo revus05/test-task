@@ -3,6 +3,8 @@ import { UsersModule } from './users/users.module'
 import { AuthModule } from './auth/auth.app'
 import { PostsModule } from './posts/posts.module'
 import { CacheModule } from '@nestjs/cache-manager'
+import { APP_FILTER } from '@nestjs/core'
+import { AllExceptionsFilter } from './AllExceptionsFilter'
 
 @Module({
 	imports: [
@@ -14,6 +16,12 @@ import { CacheModule } from '@nestjs/cache-manager'
 		AuthModule,
 		UsersModule,
 		PostsModule,
+	],
+	providers: [
+		{
+			provide: APP_FILTER,
+			useClass: AllExceptionsFilter,
+		},
 	],
 })
 export class AppModule {}

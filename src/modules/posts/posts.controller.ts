@@ -12,53 +12,20 @@ export class PostsController {
 
 	@Post()
 	async createPost(@Req() req: Request, @Res() res: Response, @Body() createPostDto: PostDto) {
-		try {
-			const post = await this.postsService.createPost(req.cookies.jwt, createPostDto)
-			res.status(HttpStatus.OK).json(getSuccessMessage('Successfully created post', post))
-		} catch (error) {
-			const status = error.status || HttpStatus.INTERNAL_SERVER_ERROR
-			const message = error.response || 'Unhandled error happened'
-
-			res.status(status).json({
-				statusCode: status,
-				status: 'error',
-				message: message,
-			})
-		}
+		const post = await this.postsService.createPost(req.cookies.jwt, createPostDto)
+		res.status(HttpStatus.OK).json(getSuccessMessage('Successfully got all users', post))
 	}
 
 	@Get()
 	async getPosts(@Res() res: Response) {
-		try {
-			const posts = await this.postsService.getPosts()
-			res.status(HttpStatus.OK).json(getSuccessMessage('Successfully got all posts', posts))
-		} catch (error) {
-			const status = error.status || HttpStatus.INTERNAL_SERVER_ERROR
-			const message = error.response || 'Unhandled error happened'
-
-			res.status(status).json({
-				statusCode: status,
-				status: 'error',
-				message: message,
-			})
-		}
+		const posts = await this.postsService.getPosts()
+		res.status(HttpStatus.OK).json(getSuccessMessage('Successfully got all posts', posts))
 	}
 
 	@Get('/:id')
 	async getPost(@Res() res: Response, @Param('id') id: string) {
-		try {
-			const post = await this.postsService.getPost(id)
-			res.status(HttpStatus.OK).json(getSuccessMessage('Successfully got post', post))
-		} catch (error) {
-			const status = error.status || HttpStatus.INTERNAL_SERVER_ERROR
-			const message = error.response || 'Unhandled error happened'
-
-			res.status(status).json({
-				statusCode: status,
-				status: 'error',
-				message: message,
-			})
-		}
+		const post = await this.postsService.getPost(id)
+		res.status(HttpStatus.OK).json(getSuccessMessage('Successfully got post', post))
 	}
 
 	@Put('/:id')
@@ -68,35 +35,13 @@ export class PostsController {
 		@Param('id') id: string,
 		@Body() updatePostDto: PostDto,
 	) {
-		try {
-			const updatedPost = await this.postsService.updatePost(req.cookies.jwt, id, updatePostDto)
-			res.status(HttpStatus.OK).json(getSuccessMessage('Successfully updated post', updatedPost))
-		} catch (error) {
-			const status = error.status || HttpStatus.INTERNAL_SERVER_ERROR
-			const message = error.response || 'Unhandled error happened'
-
-			res.status(status).json({
-				statusCode: status,
-				status: 'error',
-				message: message,
-			})
-		}
+		const updatedPost = await this.postsService.updatePost(req.cookies.jwt, id, updatePostDto)
+		res.status(HttpStatus.OK).json(getSuccessMessage('Successfully updated post', updatedPost))
 	}
 
 	@Delete('/:id')
 	async deletePost(@Req() req: Request, @Res() res: Response, @Param('id') id: string) {
-		try {
-			const deletedPost = await this.postsService.deletePost(req.cookies.jwt, id)
-			res.status(HttpStatus.OK).json(getSuccessMessage('Successfully deleted post', deletedPost))
-		} catch (error) {
-			const status = error.status || HttpStatus.INTERNAL_SERVER_ERROR
-			const message = error.response || 'Unhandled error happened'
-
-			res.status(status).json({
-				statusCode: status,
-				status: 'error',
-				message: message,
-			})
-		}
+		const deletedPost = await this.postsService.deletePost(req.cookies.jwt, id)
+		res.status(HttpStatus.OK).json(getSuccessMessage('Successfully deleted post', deletedPost))
 	}
 }
